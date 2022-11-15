@@ -9,6 +9,7 @@ INSERT INTO test (
     'world'
 );
 -- check if they have the test table
-SELECT * from test;
+SELECT *
+FROM test;
 -- create ref
-CREATE OR REPLACE PUBLIC SYNONYM test for admin.test;
+CREATE OR REPLACE PUBLIC SYNONYM test FOR admin.test;

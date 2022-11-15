@@ -17,3 +17,13 @@ ALTER USER username DEFAULT TABLESPACE tablespacename;
 -- list
 SELECT *
 FROM all_users;
+-- grant access to SCHEMA
+BEGIN
+    FOR i IN (
+        SELECT 'grant select on ' || object_name || ' to username' AS str
+        FROM all_objects
+        WHERE owner = 'ADMIN' AND object_type IN ('TABLE', 'VIEW', 'SEQUENCE', 'MATERIALIZED VIEW')
+    ) LOOP
+        EXECUTE IMMEDIATE i.str;
+    END LOOP;
+END;
