@@ -1,6 +1,15 @@
+<#
+NOTE: creates the master CSV for gamelogs to import into the database
+
+pulls automatically from retrosheet:
+https://www.retrosheet.org/gamelogs/index.html
+
+will clean up everything but the output csv
+#>
+
 # make all the column names
 $gameLogColumnHeaders =
-'Date', 
+'GameDate', 
 'GameNumber', 
 'DayOfWeek', 
 'VisitingTeam',
@@ -37,8 +46,8 @@ $gameLogColumnHeaders =
 'VisitingStrikeouts',
 'VisitingStolenBases',
 'VisitingCaughtStealing',
-'VisitingGroundedIntoDoublePlays',
-'VisitingAwardedFirstOnCatcherInterference',
+'VisitingGroundIntoDoublePlays',
+'VisitingAwardedFirstOnCatchInt',
 'VisitingLeftOnBase',
 # visiting team pitching stats
 'VisitingPitchersUsed',
@@ -68,8 +77,8 @@ $gameLogColumnHeaders =
 'HomeStrikeouts',
 'HomeStolenBases',
 'HomeCaughtStealing',
-'HomeGroundedIntoDoublePlays',
-'HomeAwardedFirstOnCatcherInterference',
+'HomeGroundIntoDoublePlays',
+'HomeAwardedFirstOnCatchInt',
 'HomeLeftOnBase',
 # home team pitching stats
 'HomePitchersUsed',
@@ -87,12 +96,12 @@ $gameLogColumnHeaders =
 # umpires
 'HomePlateUmpireId',
 'HomePlateUmpireName',
-'1bUmpireId',
-'1bUmpireName',
-'2bUmpireId',
-'2bUmpireName',
-'3bUmpireId',
-'3bUmpireName',
+'FirstBaseUmpireId',
+'FirstBaseUmpireName',
+'SecondBaseUmpireId',
+'SecondBaseUmpireName',
+'ThirdBaseUmpireId',
+'ThirdBaseUmpireName',
 'LfUmpireId',
 'LfUmpireName',
 'RfUmpireId',
@@ -120,68 +129,84 @@ $gameLogColumnHeaders =
 # visiting starting players
 'VisitingStartingPlayer1Id',
 'VisitingStartingPlayer1Name',
-'VisitingStartingPlayer1Position',
+'VisitingStartingPlayer1Pos',
 'VisitingStartingPlayer2Id',
 'VisitingStartingPlayer2Name',
-'VisitingStartingPlayer2Position',
+'VisitingStartingPlayer2Pos',
 'VisitingStartingPlayer3Id',
 'VisitingStartingPlayer3Name',
-'VisitingStartingPlayer3Position',
+'VisitingStartingPlayer3Pos',
 'VisitingStartingPlayer4Id',
 'VisitingStartingPlayer4Name',
-'VisitingStartingPlayer4Position',
+'VisitingStartingPlayer4Pos',
 'VisitingStartingPlayer5Id',
 'VisitingStartingPlayer5Name',
-'VisitingStartingPlayer5Position',
+'VisitingStartingPlayer5Pos',
 'VisitingStartingPlayer6Id',
 'VisitingStartingPlayer6Name',
-'VisitingStartingPlayer6Position',
+'VisitingStartingPlayer6Pos',
 'VisitingStartingPlayer7Id',
 'VisitingStartingPlayer7Name',
-'VisitingStartingPlayer7Position',
+'VisitingStartingPlayer7Pos',
 'VisitingStartingPlayer8Id',
 'VisitingStartingPlayer8Name',
-'VisitingStartingPlayer8Position',
+'VisitingStartingPlayer8Pos',
 'VisitingStartingPlayer9Id',
 'VisitingStartingPlayer9Name',
-'VisitingStartingPlayer9Position',
+'VisitingStartingPlayer9Pos',
 # home starting players
 'HomeStartingPlayer1Id',
 'HomeStartingPlayer1Name',
-'HomeStartingPlayer1Position',
+'HomeStartingPlayer1Pos',
 'HomeStartingPlayer2Id',
 'HomeStartingPlayer2Name',
-'HomeStartingPlayer2Position',
+'HomeStartingPlayer2Pos',
 'HomeStartingPlayer3Id',
 'HomeStartingPlayer3Name',
-'HomeStartingPlayer3Position',
+'HomeStartingPlayer3Pos',
 'HomeStartingPlayer4Id',
 'HomeStartingPlayer4Name',
-'HomeStartingPlayer4Position',
+'HomeStartingPlayer4Pos',
 'HomeStartingPlayer5Id',
 'HomeStartingPlayer5Name',
-'HomeStartingPlayer5Position',
+'HomeStartingPlayer5Pos',
 'HomeStartingPlayer6Id',
 'HomeStartingPlayer6Name',
-'HomeStartingPlayer6Position',
+'HomeStartingPlayer6Pos',
 'HomeStartingPlayer7Id',
 'HomeStartingPlayer7Name',
-'HomeStartingPlayer7Position',
+'HomeStartingPlayer7Pos',
 'HomeStartingPlayer8Id',
 'HomeStartingPlayer8Name',
-'HomeStartingPlayer8Position',
+'HomeStartingPlayer8Pos',
 'HomeStartingPlayer9Id',
 'HomeStartingPlayer9Name',
-'HomeStartingPlayer9Position',
+'HomeStartingPlayer9Pos',
 'AdditionalInformation',
 'AquisitionInformation';
 
+$zipPath = '../in/GLs.zip';
+$gameLogsPath = '../in/gamelogs';
+$gameLogExport = '../out/exportGL.csv';
+
+# then use a rest call to get the zip file
+Invoke-RestMethod -Uri 'https://www.retrosheet.org/gamelogs/gl1871_2021.zip' -Method Get -ContentType 'application/zip' -OutFile $zipPath;
+
+# then expand the gamelogs
+Expand-Archive -Path $zipPath -DestinationPath $gameLogsPath;
+
 # import all csvs from the folder
-$importedData = Get-ChildItem '../in/GL*.csv' | Select-Object -ExpandProperty FullName | Import-CSV -Header $gameLogColumnHeaders;
+$importedData = Get-ChildItem ($gameLogsPath + '/GL*.txt') | Select-Object -ExpandProperty FullName | Import-CSV -Header $gameLogColumnHeaders;
 
-# then remove every property with the Name in the property name
-$formattedData = $importedData | Select-Object -Property '*' -ExcludeProperty '*Name';
+# then remove every property with "Name" in the property name
+$formattedData = $importedData | Select-Object  -ExcludeProperty '*Name' -Property '*' , @{Name = 'Id'; Expression = { $_.HomeTeam + $_.GameDate + $_.GameNumber } };
 
-$formattedData | Export-Csv -Path '../out/GL.csv' -Delimiter ',' -NoTypeInformation
+# finally export it to a csv
+$formattedData | Export-Csv -Path $gameLogExport -Delimiter ',' -NoTypeInformation;
 
-Write-Output 'Done with conversion' ;
+# delete the zip and the input files
+Remove-Item $gameLogsPath -Recurse -Force;
+Remove-Item $zipPath -Recurse -Force
+
+# let us know
+Write-Output 'Done with game log conversion' ;
