@@ -1,18 +1,31 @@
-CREATE TABLE SCHEDULE (
-    GameDate                DATE NOT NULL,
-    NumberOfGames           VARCHAR2(1),
-    DayOfWeek               VARCHAR2(3),
-    VisitingTeam            VARCHAR2(3),
-    VisitingTeamLeague      VARCHAR2(2),
-    VisitingTeamGameAmount  NUMBER(3),
-    HomeTeam                VARCHAR2(3) NOT NULL,
-    HomeTeamLeague          VARCHAR2(2),
-    HomeTeamGameAmount      NUMBER(3) NOT NULL,
-    TimeOfDay               VARCHAR2(1),
-    GameStatus              VARCHAR2(200),
-    DateOfMakeup            VARCHAR2(200)
+/* 
+NOTE: creates the table for schedules
+*/
+
+-- drop the old table
+DROP TABLE schedule CASCADE CONSTRAINTS;
+
+-- make the table schema
+CREATE TABLE schedule (
+    gamedate date NOT NULL,
+    numberofgames VARCHAR2 (1),
+    dayofweek VARCHAR2 (3),
+    visitingteam VARCHAR2 (3),
+    visitingteamleague VARCHAR2 (2),
+    visitingteamgameamount NUMBER (3),
+    hometeam VARCHAR2 (3) NOT NULL,
+    hometeamleague VARCHAR2 (2),
+    hometeamgameamount NUMBER (3) NOT NULL,
+    timeofday VARCHAR2 (1),
+    gamestatus VARCHAR2 (200),
+    dateofmakeup date
 );
 
+-- add the PK to the table
+ALTER TABLE schedule ADD CONSTRAINT schedule_pk PRIMARY KEY (gamedate, hometeam, hometeamgameamount);
 
+-- create ref
+CREATE OR REPLACE PUBLIC SYNONYM schedule FOR admin.schedule;
 
-ALTER TABLE SCHEDULE ADD CONSTRAINT SCHEDULE_PK PRIMARY KEY (GameDate, HomeTeam, HomeTeamGameAmount);
+-- after that commit all of the changes made
+COMMIT;
