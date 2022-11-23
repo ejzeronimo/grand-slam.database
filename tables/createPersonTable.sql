@@ -1,5 +1,5 @@
 /* 
-NOTE: creates the table for transactions
+NOTE: creates the table for people
 */
 
 -- drop the old table
