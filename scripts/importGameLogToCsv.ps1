@@ -199,7 +199,7 @@ Expand-Archive -Path $zipPath -DestinationPath $gameLogsPath;
 $importedData = Get-ChildItem ($gameLogsPath + '/GL*.txt') | Select-Object -ExpandProperty FullName | Import-CSV -Header $gameLogColumnHeaders;
 
 # then remove every property with "Name" in the property name
-$formattedData = $importedData | Select-Object  -ExcludeProperty '*Name' -Property '*' , @{Name = 'Id'; Expression = { $_.HomeTeam + $_.GameDate + $_.GameNumber } };
+$formattedData = $importedData | Select-Object  -ExcludeProperty '*Name' -Property '*' , @{Name = 'GameId'; Expression = { $_.HomeTeam + $_.GameDate + $_.GameNumber } };
 
 # finally export it to a csv
 $formattedData | Export-Csv -Path $gameLogExport -Delimiter ',' -NoTypeInformation;
